@@ -2,190 +2,88 @@ import streamlit as st
 import base64
 import os
 
-st.set_page_config(page_title="방문자 리뷰 EVENT!!", page_icon="🎁", layout="centered")
+# 페이지 설정
+st.set_page_config(page_title="리뷰 이벤트 안내판", layout="centered")
 
-QR_IMAGE_PATH = "KakaoTalk_20260311_133707826.png"
+# 1. 이미지 처리 함수
+def get_base64(file):
+    return base64.b64encode(file).decode()
 
-def get_image_base64(image_path):
-    if os.path.exists(image_path):
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    return None
+# 2. 이미지 불러오기 (파일 업로더 또는 로컬 파일)
+img_src = ""
+uploaded_file = st.file_uploader("QR코드 이미지를 업로드하세요 (이미지가 안 보일 경우)", type=['png', 'jpg', 'jpeg'])
 
-qr_base64 = get_image_base64(QR_IMAGE_PATH)
-
-if qr_base64:
-    img_src = f"data:image/png;base64,{qr_base64}"
+if uploaded_file is not None:
+    # 사장님이 직접 업로드한 경우
+    img_src = f"data:image/png;base64,{get_base64(uploaded_file.read())}"
 else:
-    img_src = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=example"
+    # 깃허브에 있는 파일을 시도
+    file_path = "KakaoTalk_20260311_133707826.png"
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            img_src = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+    else:
+        # 둘 다 없을 때 보여줄 임시 이미지
+        img_src = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=example"
 
-# Streamlit이 코드로 착각하지 않도록 좌측 여백(들여쓰기)을 모두 없앴습니다.
-html_content = f"""
+# 3. 디자인 내용 (HTML)
+html_code = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-
-#MainMenu {{visibility: hidden;}}
-header {{visibility: hidden;}}
-footer {{visibility: hidden;}}
-.block-container {{padding-top: 2rem; padding-bottom: 0rem; max-width: 600px;}}
-
-.event-card {{
-font-family: 'Noto Sans KR', sans-serif;
-width: 100%;
-background: linear-gradient(145deg, #1f1f1f 0%, #121212 100%);
-border-radius: 20px;
-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-border: 2px solid #c5a059;
-padding: 40px 30px;
-text-align: center;
-position: relative;
-overflow: hidden;
-box-sizing: border-box;
-}}
-
-.event-card::before {{
-content: '';
-position: absolute;
-top: 0;
-left: 50%;
-transform: translateX(-50%);
-width: 60%;
-height: 4px;
-background: #c5a059;
-border-bottom-left-radius: 10px;
-border-bottom-right-radius: 10px;
-}}
-
-.title {{
-color: #c5a059;
-font-size: 2.2rem;
-font-weight: 900;
-letter-spacing: -1px;
-margin-bottom: 15px;
-text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}}
-
-.subtitle {{
-color: #e5e5e5;
-font-size: 1.15rem;
-font-weight: 500;
-line-height: 1.5;
-margin-bottom: 30px;
-}}
-
-.highlight {{
-color: #c5a059;
-font-weight: 700;
-font-size: 1.3rem;
-}}
-
-.qr-wrapper {{
-background-color: #ffffff;
-padding: 15px;
-border-radius: 16px;
-display: inline-block;
-margin-bottom: 30px;
-border: 4px solid #333;
-}}
-
-.qr-wrapper img {{
-width: 180px;
-height: 180px;
-object-fit: contain;
-display: block;
-}}
-
-.qr-hint {{
-color: #888;
-font-size: 0.85rem;
-margin-top: 8px;
-font-weight: 500;
-}}
-
-.steps-container {{
-background-color: rgba(255, 255, 255, 0.03);
-border: 1px solid rgba(197, 160, 89, 0.2);
-border-radius: 16px;
-padding: 25px 20px;
-margin-bottom: 30px;
-text-align: left;
-}}
-
-.step-item {{
-display: flex;
-align-items: center;
-margin-bottom: 16px;
-color: #d1d1d1;
-font-size: 1.05rem;
-font-weight: 500;
-}}
-
-.step-item:last-child {{
-margin-bottom: 0;
-}}
-
-.step-number {{
-background-color: #c5a059;
-color: #121212;
-width: 28px;
-height: 28px;
-border-radius: 50%;
-display: flex;
-justify-content: center;
-align-items: center;
-font-weight: 900;
-font-size: 0.95rem;
-margin-right: 12px;
-flex-shrink: 0;
-}}
-
-.reward-box {{
-background: linear-gradient(90deg, #b38c45, #d4b572, #b38c45);
-color: #111;
-padding: 18px 10px;
-border-radius: 12px;
-font-weight: 900;
-font-size: 1.35rem;
-letter-spacing: -0.5px;
-}}
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    #MainMenu {{visibility: hidden;}} header {{visibility: hidden;}} footer {{visibility: hidden;}}
+    .block-container {{padding: 2rem 1rem; max-width: 500px; background-color: #1a1a1a;}}
+    
+    .card {{
+        font-family: 'Noto Sans KR', sans-serif;
+        background: linear-gradient(145deg, #222, #111);
+        border: 2px solid #c5a059;
+        border-radius: 25px;
+        padding: 40px 20px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }}
+    .title {{ color: #c5a059; font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; }}
+    .subtitle {{ font-size: 1.1rem; margin-bottom: 30px; line-height: 1.4; color: #ddd; }}
+    .qr-box {{ 
+        background: white; padding: 15px; display: inline-block; 
+        border-radius: 15px; margin-bottom: 25px; border: 4px solid #333;
+    }}
+    .qr-box img {{ width: 200px; height: 200px; display: block; }}
+    .steps {{ 
+        text-align: left; background: rgba(255,255,255,0.05); 
+        padding: 20px; border-radius: 15px; margin-bottom: 25px; 
+    }}
+    .step {{ display: flex; align-items: center; margin-bottom: 12px; font-size: 1rem; }}
+    .num {{ 
+        background: #c5a059; color: #111; width: 24px; height: 24px; 
+        border-radius: 50%; display: flex; justify-content: center; 
+        align-items: center; font-weight: bold; margin-right: 12px; flex-shrink: 0;
+    }}
+    .reward {{ 
+        background: #c5a059; color: #111; padding: 15px; 
+        border-radius: 10px; font-weight: 900; font-size: 1.2rem; 
+    }}
 </style>
 
-<div class="event-card">
-<div class="title">방문자 리뷰 EVENT!!</div>
+<div class="card">
+    <div class="title">방문자 리뷰 EVENT!!</div>
+    <div class="subtitle">플레이스 저장하고 리뷰 남겨주시면<br><b>100% 서비스 당첨</b></div>
+    
+    <div class="qr-box">
+        <img src="{img_src}">
+    </div>
 
-<div class="subtitle">
-플레이스 저장하고 리뷰 남겨주시면<br>
-<span class="highlight">100% 서비스 당첨!</span>
-</div>
+    <div class="steps">
+        <div class="step"><div class="num">1</div>QR코드 스캔</div>
+        <div class="step"><div class="num">2</div>네이버 플레이스 '저장' 클릭</div>
+        <div class="step"><div class="num">3</div>방문자 리뷰 작성</div>
+        <div class="step"><div class="num">4</div>직원에게 리뷰 화면 보여주세요</div>
+    </div>
 
-<div class="qr-wrapper">
-<img src="{img_src}" alt="QR Code">
-<div class="qr-hint">스마트폰 카메라로 스캔해주세요!</div>
-</div>
-
-<div class="steps-container">
-<div class="step-item">
-<div class="step-number">1</div>
-<div>QR코드 스캔</div>
-</div>
-<div class="step-item">
-<div class="step-number">2</div>
-<div>네이버 플레이스 <strong>'저장'</strong> 클릭</div>
-</div>
-<div class="step-item">
-<div class="step-number">3</div>
-<div>정성스러운 <strong>방문자 리뷰</strong> 작성</div>
-</div>
-<div class="step-item">
-<div class="step-number">4</div>
-<div>직원에게 <strong>리뷰 화면</strong> 보여주세요</div>
-</div>
-</div>
-
-<div class="reward-box">
-서비스 / 음료 / 할인 100% 제공
-</div>
+    <div class="reward">음료 / 서비스 / 할인 100% 제공</div>
 </div>
 """
 
-st.markdown(html_content, unsafe_allow_html=True)
+# 중요: unsafe_allow_html=True를 꼭 써야 코드가 아닌 디자인이 나옵니다.
+st.markdown(html_code, unsafe_allow_html=True)
