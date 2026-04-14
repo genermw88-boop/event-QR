@@ -105,11 +105,12 @@ html_code = f"""
     <script>
     function downloadImage() {{
         const board = document.getElementById('notice-board');
-        // html2canvas로 해당 영역을 고화질 캡처
+        // 버그 해결 핵심: useCORS와 allowTaint 설정을 추가하여 외부 데이터인 QR코드 이미지도 함께 캡처하도록 수정
         html2canvas(board, {{
             backgroundColor: "#1a1a1a",
             scale: 3, // 인쇄해도 깨지지 않게 3배 고화질 적용
-            useCORS: true 
+            useCORS: true, 
+            allowTaint: true
         }}).then(canvas => {{
             const link = document.createElement('a');
             link.download = '리뷰이벤트_안내판.png';
