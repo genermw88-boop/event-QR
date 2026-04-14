@@ -1,26 +1,21 @@
 import streamlit as st
 import base64
-import os
 
 st.set_page_config(page_title="리뷰 이벤트 안내판", layout="centered")
 
-def get_base64(file):
-    return base64.b64encode(file).decode()
+# 기본 임시 이미지
+img_src = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=example"
 
-img_src = ""
-uploaded_file = st.file_uploader("1. 먼저 QR코드 이미지를 업로드하세요", type=['png', 'jpg', 'jpeg'])
+# 1. 파일 업로드 기능
+uploaded_file = st.file_uploader("여기를 눌러 사장님의 QR코드 이미지를 올려주세요", type=['png', 'jpg', 'jpeg'])
 
 if uploaded_file is not None:
-    img_src = f"data:image/png;base64,{get_base64(uploaded_file.read())}"
-else:
-    file_path = "KakaoTalk_20260311_133707826.png"
-    if os.path.exists(file_path):
-        with open(file_path, "rb") as f:
-            img_src = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-    else:
-        img_src = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=example"
+    # 버그 해결: read() 대신 getvalue()를 사용하여 화면이 새로고침 되어도 이미지가 유지되도록 수정
+    file_bytes = uploaded_file.getvalue()
+    encoded_b64 = base64.b64encode(file_bytes).decode()
+    img_src = f"data:image/png;base64,{encoded_b64}"
 
-# 화면 캡쳐 및 다운로드를 위한 html2canvas 라이브러리 포함
+# 2. 안내판 디자인 및 다운로드 스크립트 (들여쓰기 제거 완료)
 html_code = f"""
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
@@ -46,7 +41,7 @@ box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 background: white; padding: 15px; display: inline-block; 
 border-radius: 15px; margin-bottom: 25px; border: 4px solid #333;
 }}
-.qr-box img {{ width: 200px; height: 200px; display: block; }}
+.qr-box img {{ width: 200px; height: 200px; display: block; object-fit: contain; }}
 .steps {{ 
 text-align: left; background: rgba(255,255,255,0.05); 
 padding: 20px; border-radius: 15px; margin-bottom: 25px; 
@@ -98,7 +93,7 @@ function downloadImage() {{
     const board = document.getElementById('notice-board');
     html2canvas(board, {{
         backgroundColor: "#1a1a1a",
-        scale: 2  // 고화질 저장을 위해 2배 확대
+        scale: 2
     }}).then(canvas => {{
         const link = document.createElement('a');
         link.download = '리뷰이벤트_안내판.png';
